@@ -2,6 +2,17 @@
 
 Always-on AI revenue co-pilot for B2B account managers. Watches every active partner account across HubSpot, Zendesk, Microsoft 365, and the internal portal. Each morning, hands every human AM a ranked list: who to call, what to upsell, who's silently churning, who's ready for tier promotion, where co-sell openings exist.
 
+![End-to-end pipeline](docs/media/cli-run.gif)
+
+### Same data, three different ranked lists — one per AM
+
+Each AM's portfolio surfaces a different shape of attention. Alice's morning leads with a P1 incident risk on a $240K account and a silent-churn account no one had noticed; Bob's day is dominated by a 29-day renewal cliff and a combined-risk account.
+
+<p>
+  <img src="docs/media/briefing-alice.png" alt="Alice's daily briefing" width="48%">
+  <img src="docs/media/briefing-bob.png" alt="Bob's daily briefing" width="48%">
+</p>
+
 ## Why this exists
 
 Account managers shouldn't have to grep through 5 dashboards every morning to figure out which 12 of their 60 accounts deserve their attention today. AAM does that synthesis for them, deterministically — and explains *why* each account is on the list, citing the specific signals.
