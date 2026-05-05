@@ -19,6 +19,7 @@ dependencies = [
     "rich>=13.7",
     "structlog>=24.1",
     "langfuse>=3.0",
+    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]

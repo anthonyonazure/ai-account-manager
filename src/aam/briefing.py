@@ -22,6 +22,7 @@ from operator import add
 from aam.db import Briefing, session
 from aam.ranker import RankedAction, rank_for_am
 from aam.scoring import latest_signals_per_account
+from aam.slack import send_briefing_dm
 from aam.tracing import traced
 
 log = structlog.get_logger()
@@ -120,6 +121,25 @@ async def _node_persist(state: _BriefingState) -> dict[str, Any]:
     return {"events": [{"kind": "persisted", "briefing_id": bid}]}
 
 
+@traced(name="slack_dm")
+async def _node_slack_dm(state: _BriefingState) -> dict[str, Any]:
+    """Best-effort Slack delivery. No-op when AAM_SLACK_BOT_TOKEN is unset.
+    Failures are logged + recorded but do NOT fail the run — losing a
+    delivery shouldn't lose the briefing."""
+    try:
+        result = await send_briefing_dm(
+            am_email=state["am_email"],
+            markdown=state["markdown"],
+            actions=state["actions"],
+        )
+        if result.get("skipped"):
+            return {"events": [{"kind": "slack_skipped", "reason": result.get("reason")}]}
+        return {"events": [{"kind": "slack_delivered", "ts": result.get("ts"), "channel": result.get("channel")}]}
+    except Exception as e:
+        log.warning("aam.slack.delivery_failed", err=str(e)[:300])
+        return {"events": [{"kind": "slack_failed", "error": str(e)[:300]}]}
+
+
 # ---------- Graph ----------
 
 def build_briefing_graph():
@@ -128,11 +148,13 @@ def build_briefing_graph():
     g.add_node("narrative", _node_narrative)
     g.add_node("render", _node_render)
     g.add_node("persist", _node_persist)
+    g.add_node("slack_dm", _node_slack_dm)
     g.add_edge(START, "rank")
     g.add_edge("rank", "narrative")
     g.add_edge("narrative", "render")
     g.add_edge("render", "persist")
-    g.add_edge("persist", END)
+    g.add_edge("persist", "slack_dm")
+    g.add_edge("slack_dm", END)
     return g
 
 

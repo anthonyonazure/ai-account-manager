@@ -7,7 +7,11 @@ from pathlib import Path
 
 import structlog
 import typer
+from dotenv import load_dotenv
 from rich.console import Console
+
+# Load .env early so AAM_*, ANTHROPIC_API_KEY, B2B_* are visible to all modules.
+load_dotenv()
 
 from aam.briefing import generate_briefing
 from aam.db import init_db
