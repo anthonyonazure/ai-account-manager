@@ -54,6 +54,3 @@ Always-on revenue co-pilot. Watches every active partner account across HubSpot,
 7. Output channels — email (M365), Slack DM, FastAPI dashboard.
 8. Feedback loop endpoints — snooze / done / wrong, used to retrain weights.
 
-## Estimate
-
-4–5 weeks for portfolio-grade build. 10–12 weeks production-wired.
