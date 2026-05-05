@@ -13,3 +13,7 @@ build/
 .coverage
 htmlcov/
 .DS_Store
+*.db
+*.db-journal
+out/
+briefings/

@@ -1,0 +1,46 @@
+[project]
+name = "ai-account-manager"
+version = "0.1.0"
+description = "Always-on AI revenue co-pilot. Watches every B2B account, scores churn / expansion / co-sell signals, briefs human AMs daily."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+dependencies = [
+    "b2b-agent-toolkit",
+    "langgraph>=0.2.40",
+    "anthropic>=0.39",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "sqlalchemy>=2.0",
+    "aiosqlite>=0.20",
+    "apscheduler>=3.10",
+    "typer>=0.12",
+    "rich>=13.7",
+    "structlog>=24.1",
+    "langfuse>=3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.3",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+aam = "aam.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aam"]
+
+[tool.uv.sources]
+b2b-agent-toolkit = { path = "../b2b-agent-toolkit", editable = true }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
