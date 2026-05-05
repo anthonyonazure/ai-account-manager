@@ -13,6 +13,12 @@ Each AM's portfolio surfaces a different shape of attention. Alice's morning lea
   <img src="docs/media/briefing-bob.png" alt="Bob's daily briefing" width="48%">
 </p>
 
+### Delivered as Slack DMs (real workspace, real bot, real Block Kit)
+
+The briefing graph's final node opens a DM with each AM and posts a Block Kit message — header, narrative summary, then one section per ranked action with a risk / opportunity emoji.
+
+![AAM Briefings bot DM in Slack](docs/media/slack-briefing.png)
+
 ## Why this exists
 
 Account managers shouldn't have to grep through 5 dashboards every morning to figure out which 12 of their 60 accounts deserve their attention today. AAM does that synthesis for them, deterministically — and explains *why* each account is on the list, citing the specific signals.
