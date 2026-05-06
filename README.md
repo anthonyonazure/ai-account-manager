@@ -1,5 +1,10 @@
 # ai-account-manager
 
+[![tests](https://github.com/anthonyonazure/ai-account-manager/actions/workflows/tests.yml/badge.svg)](https://github.com/anthonyonazure/ai-account-manager/actions/workflows/tests.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
+[![LangGraph](https://img.shields.io/badge/orchestrator-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 Always-on AI revenue co-pilot for B2B account managers. Watches every active partner account across HubSpot, Zendesk, Microsoft 365, and the internal portal. Each morning, hands every human AM a ranked list: who to call, what to upsell, who's silently churning, who's ready for tier promotion, where co-sell openings exist.
 
 ![End-to-end pipeline](docs/media/cli-run.gif)
