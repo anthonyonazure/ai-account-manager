@@ -79,6 +79,9 @@ def _adapter() -> BotFrameworkAdapter:
         app_id=os.environ.get("AAM_TEAMS_BOT_APP_ID") or "",
         app_password=os.environ.get("AAM_TEAMS_BOT_APP_PASSWORD") or "",
     )
+    tenant = os.environ.get("AAM_TEAMS_BOT_TENANT_ID") or os.environ.get("B2B_M365_TENANT_ID")
+    if tenant:
+        settings.channel_auth_tenant = tenant
     return BotFrameworkAdapter(settings)
 
 

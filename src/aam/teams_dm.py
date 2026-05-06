@@ -47,7 +47,13 @@ def _adapter_settings() -> BotFrameworkAdapterSettings | None:
     app_pw = os.environ.get("AAM_TEAMS_BOT_APP_PASSWORD")
     if not app_id or not app_pw:
         return None
-    return BotFrameworkAdapterSettings(app_id=app_id, app_password=app_pw)
+    settings = BotFrameworkAdapterSettings(app_id=app_id, app_password=app_pw)
+    # Single-tenant bots authenticate against the customer tenant, not
+    # the default Bot Framework directory.
+    tenant = os.environ.get("AAM_TEAMS_BOT_TENANT_ID") or os.environ.get("B2B_M365_TENANT_ID")
+    if tenant:
+        settings.channel_auth_tenant = tenant
+    return settings
 
 
 def _adapter() -> BotFrameworkAdapter | None:
@@ -104,10 +110,9 @@ async def send_proactive_dm(*, am_email: str, narrative: str, actions: list[dict
             Activity(type=ActivityTypes.message, attachments=[attachment])
         )
 
+    bot_id = os.environ.get("AAM_TEAMS_BOT_APP_ID")
     try:
-        await adapter.continue_conversation(
-            ref, _send, claims_identity=None, audience=None
-        )
+        await adapter.continue_conversation(ref, _send, bot_id=bot_id)
         log.info("aam.teams_dm.delivered", am=am_email)
         return {"ok": True}
     except Exception as e:

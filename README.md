@@ -25,7 +25,11 @@ The briefing graph fans out delivery in parallel: every channel runs after the b
 
 ![Adaptive Card in Microsoft Teams channel](docs/media/teams-channel.png)
 
-**Microsoft Teams personal DMs** — for tenants where each AM should only see their own list. Requires registering AAM as a Teams app via Bot Framework (one-time Azure setup). Code is in place (`teams_dm.py`, `teams_bot_server.py`, `teams-app/manifest.template.json`); see [`teams-app/README.md`](teams-app/README.md) for the 30-min Azure provisioning walkthrough.
+**Microsoft Teams personal DMs** — same Adaptive Card, same content, but as a real 1:1 chat from a registered Teams bot via Bot Framework. Each AM sees only their own list:
+
+![AAM Briefings bot DM in Teams](docs/media/teams-dm.png)
+
+Setup is heavier than the webhook (Azure Bot Service + Teams app manifest + per-AM install) — see [`teams-app/README.md`](teams-app/README.md) for the 30-min walkthrough.
 
 ## Why this exists
 

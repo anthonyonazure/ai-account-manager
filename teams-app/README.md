@@ -80,6 +80,15 @@ Production: replace `_default_aad_resolver` in `teams_bot_server.py` with a real
 ```bash
 AAM_TEAMS_BOT_APP_ID=<from step 1>
 AAM_TEAMS_BOT_APP_PASSWORD=<from step 1>
+# Required for SingleTenant bots — outbound auth needs to target your tenant,
+# not the default "Bot Framework" directory. Optional for MultiTenant.
+AAM_TEAMS_BOT_TENANT_ID=<your tenant id>
+```
+
+If you used `az ad app create` (vs. registering via the portal), also create a service principal so the app can authenticate in your tenant:
+
+```bash
+az ad sp create --id <bot app id>
 ```
 
 ### 8. Send a real DM
