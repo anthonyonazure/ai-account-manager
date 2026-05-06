@@ -83,6 +83,19 @@ def feedback_server(host: str = "0.0.0.0", port: int = 8002):
 
 
 @app.command()
+def evals():
+    """Run the AAM eval harness — score generated briefings against
+    deterministic quality assertions. Re-seeds the DB for reproducibility."""
+    from evals.run import main as run_eval
+
+    report = asyncio.run(run_eval())
+    if report["fail_count"]:
+        console.print(f"\n[red]{report['fail_count']} AMs failed assertions.[/]")
+        for name, n in sorted(report["failures_by_assertion"].items(), key=lambda x: -x[1]):
+            console.print(f"  · `{name}`: {n}")
+
+
+@app.command()
 def teams_bot(host: str = "0.0.0.0", port: int = 3978):
     """Run the Bot Framework /api/messages endpoint (Path B Teams DM channel).
 

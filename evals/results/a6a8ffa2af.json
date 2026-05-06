@@ -1,0 +1,125 @@
+{
+  "run_id": "a6a8ffa2af",
+  "ran_at": "2026-05-06T15:04:47.726650+00:00",
+  "am_count": 3,
+  "pass_count": 2,
+  "fail_count": 1,
+  "pass_rate_pct": 66.7,
+  "model": "stub",
+  "failures_by_assertion": {
+    "at_least_one_specific_number": 1
+  },
+  "per_am": [
+    {
+      "am_email": "alice@cyberco.com",
+      "action_count": 5,
+      "passed": true,
+      "results": [
+        {
+          "assertion": "briefing_has_actions_or_states_quiet",
+          "passed": true,
+          "detail": "5 actions present"
+        },
+        {
+          "assertion": "top_action_matches_highest_weighted_score",
+          "passed": true,
+          "detail": "first action has highest weighted score"
+        },
+        {
+          "assertion": "narrative_mentions_top_account",
+          "passed": true,
+          "detail": "top account 'Vanguard Defense Systems' in markdown"
+        },
+        {
+          "assertion": "at_least_one_specific_number",
+          "passed": true,
+          "detail": "5/5 Why-lines contain a number"
+        },
+        {
+          "assertion": "no_banned_tropes",
+          "passed": true,
+          "detail": "no tropes"
+        },
+        {
+          "assertion": "narrative_length_reasonable",
+          "passed": true,
+          "detail": "narrative is 29 words (want 10-200)"
+        }
+      ]
+    },
+    {
+      "am_email": "bob@cyberco.com",
+      "action_count": 5,
+      "passed": true,
+      "results": [
+        {
+          "assertion": "briefing_has_actions_or_states_quiet",
+          "passed": true,
+          "detail": "5 actions present"
+        },
+        {
+          "assertion": "top_action_matches_highest_weighted_score",
+          "passed": true,
+          "detail": "first action has highest weighted score"
+        },
+        {
+          "assertion": "narrative_mentions_top_account",
+          "passed": true,
+          "detail": "top account 'Meridian Insurance Group' in markdown"
+        },
+        {
+          "assertion": "at_least_one_specific_number",
+          "passed": true,
+          "detail": "5/5 Why-lines contain a number"
+        },
+        {
+          "assertion": "no_banned_tropes",
+          "passed": true,
+          "detail": "no tropes"
+        },
+        {
+          "assertion": "narrative_length_reasonable",
+          "passed": true,
+          "detail": "narrative is 28 words (want 10-200)"
+        }
+      ]
+    },
+    {
+      "am_email": "carmen@cyberco.com",
+      "action_count": 2,
+      "passed": false,
+      "results": [
+        {
+          "assertion": "briefing_has_actions_or_states_quiet",
+          "passed": true,
+          "detail": "2 actions present"
+        },
+        {
+          "assertion": "top_action_matches_highest_weighted_score",
+          "passed": true,
+          "detail": "first action has highest weighted score"
+        },
+        {
+          "assertion": "narrative_mentions_top_account",
+          "passed": true,
+          "detail": "top account 'Aurora Robotics' in markdown"
+        },
+        {
+          "assertion": "at_least_one_specific_number",
+          "passed": false,
+          "detail": "1/2 Why-lines contain a number"
+        },
+        {
+          "assertion": "no_banned_tropes",
+          "passed": true,
+          "detail": "no tropes"
+        },
+        {
+          "assertion": "narrative_length_reasonable",
+          "passed": true,
+          "detail": "narrative is 14 words (want 10-200)"
+        }
+      ]
+    }
+  ]
+}
