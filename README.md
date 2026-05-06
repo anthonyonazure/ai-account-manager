@@ -13,11 +13,17 @@ Each AM's portfolio surfaces a different shape of attention. Alice's morning lea
   <img src="docs/media/briefing-bob.png" alt="Bob's daily briefing" width="48%">
 </p>
 
-### Delivered as Slack DMs (real workspace, real bot, real Block Kit)
+### Delivered to wherever the team works
 
-The briefing graph's final node opens a DM with each AM and posts a Block Kit message — header, narrative summary, then one section per ranked action with a risk / opportunity emoji.
+The briefing graph fans out delivery in parallel: every channel runs after the briefing is persisted, each is fail-soft (a Slack outage doesn't block the Teams send), each is opt-in via env vars (set the token / URL → it activates).
+
+**Slack DMs** — Block Kit message, header + narrative + one section per ranked action with a risk / opportunity emoji:
 
 ![AAM Briefings bot DM in Slack](docs/media/slack-briefing.png)
+
+**Microsoft Teams channel** — the same briefing posted as an Adaptive Card via a Power Automate webhook. RISK / OPP color blocks make scanning trivial:
+
+![Adaptive Card in Microsoft Teams channel](docs/media/teams-channel.png)
 
 ## Why this exists
 

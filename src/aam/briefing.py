@@ -23,6 +23,7 @@ from aam.db import Briefing, session
 from aam.ranker import RankedAction, rank_for_am
 from aam.scoring import latest_signals_per_account
 from aam.slack import send_briefing_dm
+from aam.teams_channel import post_briefing as post_teams_briefing
 from aam.tracing import traced
 
 log = structlog.get_logger()
@@ -121,6 +122,26 @@ async def _node_persist(state: _BriefingState) -> dict[str, Any]:
     return {"events": [{"kind": "persisted", "briefing_id": bid}]}
 
 
+@traced(name="teams_channel")
+async def _node_teams_channel(state: _BriefingState) -> dict[str, Any]:
+    """Best-effort Microsoft Teams channel delivery via Power Automate webhook.
+    No-op when AAM_TEAMS_WEBHOOK_URL is unset; fail-soft on delivery error."""
+    try:
+        result = await post_teams_briefing(
+            am_email=state["am_email"],
+            narrative=state.get("narrative") or "",
+            actions=state["actions"],
+        )
+        if result.get("skipped"):
+            return {"events": [{"kind": "teams_skipped", "reason": result.get("reason")}]}
+        if result.get("ok"):
+            return {"events": [{"kind": "teams_delivered", "status": result.get("status")}]}
+        return {"events": [{"kind": "teams_failed", "error": result.get("error")}]}
+    except Exception as e:
+        log.warning("aam.teams.delivery_failed", err=str(e)[:300])
+        return {"events": [{"kind": "teams_failed", "error": str(e)[:300]}]}
+
+
 @traced(name="slack_dm")
 async def _node_slack_dm(state: _BriefingState) -> dict[str, Any]:
     """Best-effort Slack delivery. No-op when AAM_SLACK_BOT_TOKEN is unset.
@@ -149,12 +170,17 @@ def build_briefing_graph():
     g.add_node("render", _node_render)
     g.add_node("persist", _node_persist)
     g.add_node("slack_dm", _node_slack_dm)
+    g.add_node("teams_channel", _node_teams_channel)
     g.add_edge(START, "rank")
     g.add_edge("rank", "narrative")
     g.add_edge("narrative", "render")
     g.add_edge("render", "persist")
+    # Persist + delivery channels: slack_dm and teams_channel run in parallel
+    # after persist, then both fan into END. Each is fail-soft.
     g.add_edge("persist", "slack_dm")
+    g.add_edge("persist", "teams_channel")
     g.add_edge("slack_dm", END)
+    g.add_edge("teams_channel", END)
     return g
 
 
