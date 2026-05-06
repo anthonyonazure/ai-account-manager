@@ -25,7 +25,7 @@ RUN git clone --depth 1 --branch ${TOOLKIT_REF} \
 # Install toolkit + AAM
 COPY pyproject.toml README.md ./
 COPY src ./src
-COPY mock_portal ./mock_portal
+COPY evals ./evals
 
 RUN pip install --upgrade pip \
     && pip install /toolkit \
