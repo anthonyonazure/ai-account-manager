@@ -20,6 +20,8 @@ dependencies = [
     "structlog>=24.1",
     "langfuse>=3.0",
     "python-dotenv>=1.0",
+    "botbuilder-core>=4.17",
+    "botbuilder-schema>=4.17",
 ]
 
 [project.optional-dependencies]

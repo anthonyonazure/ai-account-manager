@@ -25,6 +25,8 @@ The briefing graph fans out delivery in parallel: every channel runs after the b
 
 ![Adaptive Card in Microsoft Teams channel](docs/media/teams-channel.png)
 
+**Microsoft Teams personal DMs** — for tenants where each AM should only see their own list. Requires registering AAM as a Teams app via Bot Framework (one-time Azure setup). Code is in place (`teams_dm.py`, `teams_bot_server.py`, `teams-app/manifest.template.json`); see [`teams-app/README.md`](teams-app/README.md) for the 30-min Azure provisioning walkthrough.
+
 ## Why this exists
 
 Account managers shouldn't have to grep through 5 dashboards every morning to figure out which 12 of their 60 accounts deserve their attention today. AAM does that synthesis for them, deterministically — and explains *why* each account is on the list, citing the specific signals.

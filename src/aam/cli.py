@@ -82,6 +82,18 @@ def feedback_server(host: str = "0.0.0.0", port: int = 8002):
     uvicorn.run("aam.feedback:app", host=host, port=port, reload=False)
 
 
+@app.command()
+def teams_bot(host: str = "0.0.0.0", port: int = 3978):
+    """Run the Bot Framework /api/messages endpoint (Path B Teams DM channel).
+
+    Public URL must be set as the bot's messaging endpoint in Azure Bot Service.
+    Use ngrok / cloudflared during development, e.g. `ngrok http 3978`.
+    """
+    import uvicorn
+
+    uvicorn.run("aam.teams_bot_server:app", host=host, port=port, reload=False)
+
+
 def _today() -> str:
     from datetime import datetime, timezone
 

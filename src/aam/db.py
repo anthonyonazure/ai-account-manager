@@ -93,6 +93,25 @@ class Briefing(Base):
     actions: Mapped[list] = mapped_column(JSON)  # list of {account_id, kind, score, reason, suggested_action}
 
 
+class TeamsConversationRef(Base):
+    """Per-AM Bot Framework ConversationReference, captured when the AM installs
+    the AAM bot or first messages it. Required for proactive messaging because
+    Bot Framework can't DM cold — there must be a prior conversation."""
+
+    __tablename__ = "teams_conversation_refs"
+
+    am_email: Mapped[str] = mapped_column(String, primary_key=True)
+    aad_object_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    service_url: Mapped[str] = mapped_column(String)
+    conversation_id: Mapped[str] = mapped_column(String)
+    bot_id: Mapped[str] = mapped_column(String)
+    bot_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    user_id: Mapped[str] = mapped_column(String)
+    user_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    tenant_id: Mapped[str] = mapped_column(String)
+    captured_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class AmFeedback(Base):
     __tablename__ = "am_feedback"
 
