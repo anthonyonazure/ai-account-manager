@@ -3,18 +3,28 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import AsyncIterator
 
-from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 DATABASE_URL = os.environ.get("AAM_DATABASE_URL", "sqlite+aiosqlite:///./aam.db")
 
 _engine = create_async_engine(DATABASE_URL, echo=False, future=True)
-_session_factory = async_sessionmaker(_engine, expire_on_commit=False, class_=AsyncSession)
+_session_factory = async_sessionmaker(
+    _engine, expire_on_commit=False, class_=AsyncSession
+)
 
 
 class Base(DeclarativeBase):
@@ -36,7 +46,7 @@ class Account(Base):
     industry: Mapped[str] = mapped_column(String, default="financial_services")
     am_email: Mapped[str] = mapped_column(String)
 
-    snapshots: Mapped[list["AccountSnapshot"]] = relationship(back_populates="account")
+    snapshots: Mapped[list[AccountSnapshot]] = relationship(back_populates="account")
 
 
 class AccountSnapshot(Base):
@@ -44,7 +54,9 @@ class AccountSnapshot(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     account_id: Mapped[str] = mapped_column(ForeignKey("accounts.id"), index=True)
-    captured_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    captured_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, index=True
+    )
 
     # Raw signal inputs from each source
     hubspot_emails_opened_30d: Mapped[int] = mapped_column(Integer, default=0)
@@ -64,7 +76,7 @@ class AccountSnapshot(Base):
 
     sharepoint_doc_views_30d: Mapped[int] = mapped_column(Integer, default=0)
 
-    account: Mapped["Account"] = relationship(back_populates="snapshots")
+    account: Mapped[Account] = relationship(back_populates="snapshots")
 
 
 class Signal(Base):
@@ -75,7 +87,9 @@ class Signal(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     account_id: Mapped[str] = mapped_column(ForeignKey("accounts.id"), index=True)
-    snapshot_id: Mapped[int] = mapped_column(ForeignKey("account_snapshots.id"), index=True)
+    snapshot_id: Mapped[int] = mapped_column(
+        ForeignKey("account_snapshots.id"), index=True
+    )
     kind: Mapped[str] = mapped_column(String, index=True)  # see signals.SIGNAL_KINDS
     score: Mapped[float] = mapped_column(Float)  # 0.0 = none, 1.0 = max
     direction: Mapped[str] = mapped_column(String)  # "risk" | "opportunity"
@@ -88,9 +102,13 @@ class Briefing(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     am_email: Mapped[str] = mapped_column(String, index=True)
-    generated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    generated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, index=True
+    )
     markdown: Mapped[str] = mapped_column(String)
-    actions: Mapped[list] = mapped_column(JSON)  # list of {account_id, kind, score, reason, suggested_action}
+    actions: Mapped[list] = mapped_column(
+        JSON
+    )  # list of {account_id, kind, score, reason, suggested_action}
 
 
 class TeamsConversationRef(Base):

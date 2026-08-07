@@ -13,6 +13,8 @@ from rich.console import Console
 # Load .env early so AAM_*, ANTHROPIC_API_KEY, B2B_* are visible to all modules.
 load_dotenv()
 
+from datetime import UTC
+
 from aam.briefing import generate_briefing
 from aam.db import init_db
 from aam.pullers import pull_all_accounts
@@ -91,7 +93,9 @@ def evals():
     report = asyncio.run(run_eval())
     if report["fail_count"]:
         console.print(f"\n[red]{report['fail_count']} AMs failed assertions.[/]")
-        for name, n in sorted(report["failures_by_assertion"].items(), key=lambda x: -x[1]):
+        for name, n in sorted(
+            report["failures_by_assertion"].items(), key=lambda x: -x[1]
+        ):
             console.print(f"  · `{name}`: {n}")
 
 
@@ -108,9 +112,9 @@ def teams_bot(host: str = "0.0.0.0", port: int = 3978):
 
 
 def _today() -> str:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return datetime.now(UTC).strftime("%Y-%m-%d")
 
 
 if __name__ == "__main__":

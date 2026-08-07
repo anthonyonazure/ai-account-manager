@@ -9,7 +9,7 @@ schedule `aam pull` nightly via cron / APScheduler.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 from b2b_toolkit import get_adapters
@@ -23,20 +23,24 @@ log = structlog.get_logger()
 async def pull_account(account_id: str) -> AccountSnapshot | None:
     adapters = get_adapters()
     async with session() as s:
-        account = (await s.execute(select(Account).where(Account.id == account_id))).scalar_one_or_none()
+        account = (
+            await s.execute(select(Account).where(Account.id == account_id))
+        ).scalar_one_or_none()
         if account is None:
             log.warning("aam.pull.unknown_account", account_id=account_id)
             return None
 
         # The mocks return canned numbers; in prod these are live API calls
         hub_signals = await adapters.hubspot.get_engagement_signals(account_id, days=30)
-        zen_signals = await adapters.zendesk.get_ticket_velocity(0, days=30)  # mock ignores org_id
+        zen_signals = await adapters.zendesk.get_ticket_velocity(
+            0, days=30
+        )  # mock ignores org_id
         # Portal pull is skipped here since the mock portal accounts are scoped
         # to the onboarding-agent demo; in prod this would be: await adapters.portal.get_usage(...)
 
         snap = AccountSnapshot(
             account_id=account_id,
-            captured_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            captured_at=datetime.now(UTC).replace(tzinfo=None),
             hubspot_emails_opened_30d=hub_signals.get("emails_opened", 0),
             hubspot_meetings_30d=hub_signals.get("meetings_attended", 0),
             hubspot_last_activity_days_ago=4,  # parsed from last_activity_at in prod

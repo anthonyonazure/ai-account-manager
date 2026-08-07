@@ -44,7 +44,10 @@ async def test_carmen_briefing_only_opportunities(seeded_db):
     actions = final["actions"]
     assert all(a["direction"] == "opportunity" for a in actions)
     # Module gap on Northwind should appear
-    assert any(a["account"]["id"] == "acct-006" and a["signal_kind"] == "module_gap" for a in actions)
+    assert any(
+        a["account"]["id"] == "acct-006" and a["signal_kind"] == "module_gap"
+        for a in actions
+    )
 
 
 @pytest.mark.asyncio

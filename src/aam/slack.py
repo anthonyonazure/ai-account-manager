@@ -35,9 +35,8 @@ def _recipient_for(am_email: str) -> str | None:
       2. AAM_SLACK_RECIPIENT_DEFAULT
     """
     localpart = am_email.split("@", 1)[0].replace(".", "_").upper()
-    return (
-        os.environ.get(f"AAM_SLACK_RECIPIENT_{localpart}")
-        or os.environ.get("AAM_SLACK_RECIPIENT_DEFAULT")
+    return os.environ.get(f"AAM_SLACK_RECIPIENT_{localpart}") or os.environ.get(
+        "AAM_SLACK_RECIPIENT_DEFAULT"
     )
 
 
@@ -73,7 +72,9 @@ async def _resolve_user_id(handle_or_email: str, token: str) -> str:
         data = r.json()
         if data.get("ok"):
             return data["user"]["id"]
-        raise SlackError(f"users.lookupByEmail failed for {handle_or_email}: {data.get('error')}")
+        raise SlackError(
+            f"users.lookupByEmail failed for {handle_or_email}: {data.get('error')}"
+        )
 
     # Handle (anthony / @anthony) → users.list scan
     handle = handle_or_email.lstrip("@").lower()
@@ -93,7 +94,8 @@ async def _resolve_user_id(handle_or_email: str, token: str) -> str:
                     continue
                 if (
                     (u.get("name") or "").lower() == handle
-                    or (u.get("profile", {}).get("display_name") or "").lower() == handle
+                    or (u.get("profile", {}).get("display_name") or "").lower()
+                    == handle
                     or (u.get("profile", {}).get("real_name") or "").lower() == handle
                 ):
                     return u["id"]
@@ -103,7 +105,9 @@ async def _resolve_user_id(handle_or_email: str, token: str) -> str:
     raise SlackError(f"no slack user matched handle/email {handle_or_email!r}")
 
 
-async def send_briefing_dm(*, am_email: str, markdown: str, actions: list[dict]) -> dict:
+async def send_briefing_dm(
+    *, am_email: str, markdown: str, actions: list[dict]
+) -> dict:
     """Open a DM with the resolved user and post the briefing.
 
     Returns the Slack message metadata, or raises SlackError if delivery fails.
@@ -133,7 +137,10 @@ async def send_briefing_dm(*, am_email: str, markdown: str, actions: list[dict])
 
     # Build a Block Kit message: header, summary text, then a list of action blocks
     blocks: list[dict] = [
-        {"type": "header", "text": {"type": "plain_text", "text": f"Daily briefing — {am_email}"}},
+        {
+            "type": "header",
+            "text": {"type": "plain_text", "text": f"Daily briefing — {am_email}"},
+        },
         {"type": "section", "text": {"type": "mrkdwn", "text": text[:2900]}},
     ]
     for i, a in enumerate(actions, 1):
@@ -154,7 +161,11 @@ async def send_briefing_dm(*, am_email: str, markdown: str, actions: list[dict])
 
     msg = await _slack_post(
         "chat.postMessage",
-        {"channel": channel_id, "blocks": blocks, "text": f"Daily briefing — {am_email}"},
+        {
+            "channel": channel_id,
+            "blocks": blocks,
+            "text": f"Daily briefing — {am_email}",
+        },
         token,
     )
     log.info("aam.slack.delivered", am=am_email, channel=channel_id, ts=msg.get("ts"))

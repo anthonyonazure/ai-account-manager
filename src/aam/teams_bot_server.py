@@ -51,11 +51,16 @@ class _AAMBot(ActivityHandler):
     async def on_members_added_activity(
         self, members_added: list[ChannelAccount], turn_context: TurnContext
     ):
+        # `recipient` is optional on the wire model; when it is absent there is
+        # no bot account to compare against, so every added member is a person.
+        recipient = turn_context.activity.recipient
+        recipient_id = recipient.id if recipient is not None else None
         for m in members_added:
-            if m.id != turn_context.activity.recipient.id:
+            if m.id != recipient_id:
                 # An AM was added — they just installed the bot
                 await store_conversation_ref(
-                    activity=turn_context.activity, am_email_resolver=_default_aad_resolver
+                    activity=turn_context.activity,
+                    am_email_resolver=_default_aad_resolver,
                 )
                 await turn_context.send_activity(
                     "AAM Briefings is installed. You'll receive a daily ranked list "
@@ -79,7 +84,9 @@ def _adapter() -> BotFrameworkAdapter:
         app_id=os.environ.get("AAM_TEAMS_BOT_APP_ID") or "",
         app_password=os.environ.get("AAM_TEAMS_BOT_APP_PASSWORD") or "",
     )
-    tenant = os.environ.get("AAM_TEAMS_BOT_TENANT_ID") or os.environ.get("B2B_M365_TENANT_ID")
+    tenant = os.environ.get("AAM_TEAMS_BOT_TENANT_ID") or os.environ.get(
+        "B2B_M365_TENANT_ID"
+    )
     if tenant:
         settings.channel_auth_tenant = tenant
     return BotFrameworkAdapter(settings)
@@ -104,5 +111,9 @@ async def messages(req: Request) -> Response:
 
     response = await _adapter().process_activity(activity, auth_header, _bot.on_turn)
     if response:
-        return Response(content=response.body, status_code=response.status, media_type="application/json")
+        return Response(
+            content=response.body,
+            status_code=response.status,
+            media_type="application/json",
+        )
     return Response(status_code=200)

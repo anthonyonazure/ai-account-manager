@@ -13,13 +13,12 @@ import json
 import os
 import uuid
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from aam.briefing import generate_briefing
 from aam.scoring import score_all
 from aam.seed import seed as seed_db
-
 from evals.assertions import evaluate_briefing
 
 EVAL_DIR = Path(__file__).resolve().parent
@@ -31,7 +30,11 @@ async def run_eval(*, ams: list[str] | None = None) -> dict:
     ams = ams or SAMPLE_AMS
 
     # Re-seed + score so the eval is reproducible regardless of prior state
-    db_path = Path(os.environ.get("AAM_DATABASE_URL", "sqlite+aiosqlite:///./aam.db").replace("sqlite+aiosqlite:///", ""))
+    db_path = Path(
+        os.environ.get("AAM_DATABASE_URL", "sqlite+aiosqlite:///./aam.db").replace(
+            "sqlite+aiosqlite:///", ""
+        )
+    )
     if db_path.exists():
         db_path.unlink()
     await seed_db()
@@ -43,7 +46,7 @@ async def run_eval(*, ams: list[str] | None = None) -> dict:
         scored.append(evaluate_briefing(state, am))
 
     pass_count = sum(1 for s in scored if s["passed"])
-    failures_by_assertion = Counter()
+    failures_by_assertion: Counter[str] = Counter()
     for s in scored:
         for r in s["results"]:
             if not r["passed"]:
@@ -51,12 +54,14 @@ async def run_eval(*, ams: list[str] | None = None) -> dict:
 
     return {
         "run_id": uuid.uuid4().hex[:10],
-        "ran_at": datetime.now(timezone.utc).isoformat(),
+        "ran_at": datetime.now(UTC).isoformat(),
         "am_count": len(ams),
         "pass_count": pass_count,
         "fail_count": len(ams) - pass_count,
         "pass_rate_pct": round(pass_count / max(len(ams), 1) * 100, 1),
-        "model": "stub" if not os.environ.get("ANTHROPIC_API_KEY") else os.environ.get("AAM_MODEL", "claude-sonnet-4-6"),
+        "model": "stub"
+        if not os.environ.get("ANTHROPIC_API_KEY")
+        else os.environ.get("AAM_MODEL", "claude-sonnet-4-6"),
         "failures_by_assertion": dict(failures_by_assertion),
         "per_am": scored,
     }
@@ -99,7 +104,9 @@ def write_reports(report: dict) -> tuple[Path, Path]:
 async def main() -> dict:
     report = await run_eval()
     json_path, md_path = write_reports(report)
-    print(f"Pass rate: {report['pass_rate_pct']}%  ({report['pass_count']}/{report['am_count']})")
+    print(
+        f"Pass rate: {report['pass_rate_pct']}%  ({report['pass_count']}/{report['am_count']})"
+    )
     print(f"Reports:  {md_path}  +  {json_path}")
     return report
 

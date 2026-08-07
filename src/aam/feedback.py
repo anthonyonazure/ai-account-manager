@@ -33,7 +33,9 @@ async def health() -> dict:
 @app.post("/v1/feedback")
 async def submit_feedback(body: FeedbackBody) -> dict:
     if body.verdict not in {"done", "snooze", "wrong"}:
-        raise HTTPException(400, f"verdict must be one of done/snooze/wrong, got {body.verdict!r}")
+        raise HTTPException(
+            400, f"verdict must be one of done/snooze/wrong, got {body.verdict!r}"
+        )
     async with session() as s:
         s.add(
             AmFeedback(

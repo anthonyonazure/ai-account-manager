@@ -27,7 +27,9 @@ def _action(name, weighted=0.5, signal_kind="ticket_velocity_risk", direction="r
 
 
 def test_quiet_day_passes_without_actions():
-    s = _state(actions=[], markdown="**Nothing to action today.** All your accounts steady.")
+    s = _state(
+        actions=[], markdown="**Nothing to action today.** All your accounts steady."
+    )
     ok, _ = briefing_has_actions_or_states_quiet(s)
     assert ok
 

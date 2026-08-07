@@ -1,16 +1,24 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from aam.db import Account
 from aam.ranker import DEFAULT_WEIGHTS, rank_for_am
 
-NOW = datetime.now(timezone.utc).replace(tzinfo=None)
+NOW = datetime.now(UTC).replace(tzinfo=None)
 
 
 def _acct(id, am):
     return Account(
-        id=id, name=f"a{id}", domain="x.com", tier="silver", region="NA",
-        services_purchased=[], contract_start=NOW, contract_end=NOW + timedelta(days=200),
-        arr=10_000.0, industry="financial_services", am_email=am,
+        id=id,
+        name=f"a{id}",
+        domain="x.com",
+        tier="silver",
+        region="NA",
+        services_purchased=[],
+        contract_start=NOW,
+        contract_end=NOW + timedelta(days=200),
+        arr=10_000.0,
+        industry="financial_services",
+        am_email=am,
     )
 
 
@@ -18,8 +26,28 @@ def test_filters_by_am():
     a1 = _acct("1", "alice@x")
     a2 = _acct("2", "bob@x")
     pairs = [
-        (a1, [{"kind": "ticket_velocity_risk", "score": 1.0, "direction": "risk", "detail": {}}]),
-        (a2, [{"kind": "renewal_proximity", "score": 1.0, "direction": "risk", "detail": {}}]),
+        (
+            a1,
+            [
+                {
+                    "kind": "ticket_velocity_risk",
+                    "score": 1.0,
+                    "direction": "risk",
+                    "detail": {},
+                }
+            ],
+        ),
+        (
+            a2,
+            [
+                {
+                    "kind": "renewal_proximity",
+                    "score": 1.0,
+                    "direction": "risk",
+                    "detail": {},
+                }
+            ],
+        ),
     ]
     r = rank_for_am("alice@x", pairs)
     assert len(r) == 1
@@ -29,10 +57,23 @@ def test_filters_by_am():
 def test_weighting_orders_correctly():
     a = _acct("1", "alice@x")
     pairs = [
-        (a, [
-            {"kind": "module_gap",          "score": 1.0, "direction": "opportunity", "detail": {}},
-            {"kind": "ticket_velocity_risk","score": 1.0, "direction": "risk",        "detail": {}},
-        ]),
+        (
+            a,
+            [
+                {
+                    "kind": "module_gap",
+                    "score": 1.0,
+                    "direction": "opportunity",
+                    "detail": {},
+                },
+                {
+                    "kind": "ticket_velocity_risk",
+                    "score": 1.0,
+                    "direction": "risk",
+                    "detail": {},
+                },
+            ],
+        ),
     ]
     r = rank_for_am("alice@x", pairs)
     # ticket_velocity_risk weight (1.0) > module_gap weight (0.6)
@@ -42,6 +83,9 @@ def test_weighting_orders_correctly():
 
 def test_top_n_caps_results():
     a = _acct("1", "alice@x")
-    sigs = [{"kind": k, "score": 1.0, "direction": "risk", "detail": {}} for k in DEFAULT_WEIGHTS]
+    sigs = [
+        {"kind": k, "score": 1.0, "direction": "risk", "detail": {}}
+        for k in DEFAULT_WEIGHTS
+    ]
     r = rank_for_am("alice@x", [(a, sigs)], top_n=3)
     assert len(r) == 3

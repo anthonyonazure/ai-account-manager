@@ -129,5 +129,10 @@ async def post_briefing(*, am_email: str, narrative: str, actions: list[dict]) -
     if r.status_code in (200, 202):
         log.info("aam.teams.delivered", am=am_email, status=r.status_code)
         return {"ok": True, "status": r.status_code}
-    log.warning("aam.teams.delivery_failed", am=am_email, status=r.status_code, body=r.text[:300])
+    log.warning(
+        "aam.teams.delivery_failed",
+        am=am_email,
+        status=r.status_code,
+        body=r.text[:300],
+    )
     return {"ok": False, "status": r.status_code, "error": r.text[:300]}
