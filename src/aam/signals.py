@@ -6,8 +6,8 @@ and returns a Signal-shape dict. Score is normalized to 0.0..1.0.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Iterable
+from collections.abc import Iterable, Sequence
+from datetime import UTC, datetime
 
 from aam.db import Account, AccountSnapshot
 
@@ -23,10 +23,10 @@ SIGNAL_KINDS = (
 
 
 def _latest(snaps: list[AccountSnapshot]) -> AccountSnapshot:
-    return sorted(snaps, key=lambda s: s.captured_at)[-1]
+    return max(snaps, key=lambda s: s.captured_at)
 
 
-def _trend(values: list[float]) -> float:
+def _trend(values: Sequence[float]) -> float:
     """Return % change from first to last value, clamped to [-1, 1]."""
     if len(values) < 2 or values[0] == 0:
         return 0.0
@@ -37,7 +37,9 @@ def _trend(values: list[float]) -> float:
 def engagement_decay(account: Account, snaps: list[AccountSnapshot]) -> dict | None:
     if len(snaps) < 2:
         return None
-    series = [s.hubspot_emails_opened_30d for s in sorted(snaps, key=lambda s: s.captured_at)]
+    series = [
+        s.hubspot_emails_opened_30d for s in sorted(snaps, key=lambda s: s.captured_at)
+    ]
     trend = _trend(series)  # negative = decay
     if trend > -0.3:
         return None
@@ -86,7 +88,9 @@ def usage_growth(account: Account, snaps: list[AccountSnapshot]) -> dict | None:
     sorted_snaps = sorted(snaps, key=lambda s: s.captured_at)
     series = [s.portal_logins_30d for s in sorted_snaps]
     trend = _trend(series)
-    module_growth = len(sorted_snaps[-1].portal_modules_active) - len(sorted_snaps[0].portal_modules_active)
+    module_growth = len(sorted_snaps[-1].portal_modules_active) - len(
+        sorted_snaps[0].portal_modules_active
+    )
     if trend < 0.5 and module_growth <= 0:
         return None
     score = min(1.0, max(trend, module_growth * 0.4))
@@ -120,7 +124,9 @@ def module_gap(account: Account, snaps: list[AccountSnapshot]) -> dict | None:
 
 
 def renewal_proximity(account: Account, snaps: list[AccountSnapshot]) -> dict | None:
-    days_to_renewal = (account.contract_end - datetime.now(timezone.utc).replace(tzinfo=None)).days
+    days_to_renewal = (
+        account.contract_end - datetime.now(UTC).replace(tzinfo=None)
+    ).days
     if days_to_renewal > 90:
         return None
     if days_to_renewal < 0:
@@ -167,7 +173,11 @@ def cosell_fit(
 ) -> dict | None:
     """Co-sell openings: another account in the same industry is healthy and growing.
     Could open warm intros, joint case studies, or industry-specific feature dev."""
-    peers = [p for p in healthy_peers_by_industry.get(account.industry, []) if p != account.id]
+    peers = [
+        p
+        for p in healthy_peers_by_industry.get(account.industry, [])
+        if p != account.id
+    ]
     if not peers:
         return None
     last = _latest(snaps)

@@ -17,11 +17,30 @@ jobs:
   python:
     name: Python
     runs-on: ubuntu-latest
+    # Checked out into ./agent (as tests.yml already does) so the sibling
+    # b2b-agent-toolkit repo can live beside it without ruff or mypy ever
+    # seeing it as part of this project's source tree.
+    defaults:
+      run:
+        working-directory: agent
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: agent
+      # b2b-agent-toolkit is a dependency with no PyPI release; it resolves
+      # from a sibling checkout, which is how tests.yml installs it too.
+      - uses: actions/checkout@v4
+        with:
+          repository: anthonyonazure/b2b-agent-toolkit
+          path: b2b-agent-toolkit
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - run: pip install ruff mypy pytest
+      # Install the project itself, not just the tools: without its
+      # dependencies mypy cannot resolve sqlalchemy/langgraph/botbuilder and
+      # pytest cannot even import the `aam` package.
+      - run: |
+          pip install -e ../b2b-agent-toolkit
+          pip install -e ".[dev]" ruff mypy
       - run: ruff check .
       - run: ruff format --check .
       - run: mypy .
@@ -132,7 +151,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@0.28.0
+      # Released tags on this action carry a v prefix; 0.28.0 does not
+      # exist and the job failed to resolve the action at all.
+      - uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: config
           severity: HIGH,CRITICAL

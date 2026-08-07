@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timezone
-from typing import Iterable
+from datetime import UTC, datetime
 
 import structlog
 from sqlalchemy import delete, select
 
 from aam.db import Account, AccountSnapshot, Signal, session
-from aam.signals import SIGNAL_KINDS, compute_all  # noqa: F401  (kinds exported for callers)
+from aam.signals import (  # noqa: F401  (kinds exported for callers)
+    SIGNAL_KINDS,
+    compute_all,
+)
 
 log = structlog.get_logger()
 
@@ -27,7 +29,7 @@ async def _build_healthy_peers_map(
         snaps = snaps_by_account.get(a.id, [])
         if not snaps:
             continue
-        last = sorted(snaps, key=lambda s: s.captured_at)[-1]
+        last = max(snaps, key=lambda s: s.captured_at)
         if (
             last.portal_logins_30d >= HEALTHY_INDUSTRY_THRESHOLD_LOGINS
             and last.zendesk_csat >= HEALTHY_INDUSTRY_THRESHOLD_CSAT
@@ -55,10 +57,12 @@ async def score_all() -> int:
             account_snaps = snaps_by_account.get(account.id, [])
             if not account_snaps:
                 continue
-            latest_snap = sorted(account_snaps, key=lambda s: s.captured_at)[-1]
+            latest_snap = max(account_snaps, key=lambda s: s.captured_at)
             # Idempotency: clear any prior signals for this snapshot before inserting
             await s.execute(delete(Signal).where(Signal.snapshot_id == latest_snap.id))
-            for sig in compute_all(account, account_snaps, healthy_peers_by_industry=peers_map):
+            for sig in compute_all(
+                account, account_snaps, healthy_peers_by_industry=peers_map
+            ):
                 s.add(
                     Signal(
                         account_id=account.id,
@@ -67,7 +71,7 @@ async def score_all() -> int:
                         score=sig["score"],
                         direction=sig["direction"],
                         detail=sig["detail"],
-                        computed_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                        computed_at=datetime.now(UTC).replace(tzinfo=None),
                     )
                 )
                 n_signals += 1

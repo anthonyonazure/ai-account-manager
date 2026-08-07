@@ -15,12 +15,12 @@ from aam.db import Account
 # missing a churn warning costs more than missing an upsell.
 DEFAULT_WEIGHTS: dict[str, float] = {
     "ticket_velocity_risk": 1.00,
-    "renewal_proximity":    0.95,
-    "engagement_decay":     0.85,
-    "usage_growth":         0.70,
-    "cosell_fit":           0.60,
-    "module_gap":           0.60,
-    "doc_activity_decay":   0.50,
+    "renewal_proximity": 0.95,
+    "engagement_decay": 0.85,
+    "usage_growth": 0.70,
+    "cosell_fit": 0.60,
+    "module_gap": 0.60,
+    "doc_activity_decay": 0.50,
 }
 
 
@@ -29,7 +29,7 @@ class RankedAction:
     account: Account
     signal_kind: str
     signal_score: float
-    direction: str       # "risk" | "opportunity"
+    direction: str  # "risk" | "opportunity"
     weighted_score: float
     detail: dict
 

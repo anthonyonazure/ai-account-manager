@@ -19,7 +19,6 @@ requirement, not a code limitation.
 from __future__ import annotations
 
 import os
-from typing import Any
 
 import structlog
 from botbuilder.core import (
@@ -50,7 +49,9 @@ def _adapter_settings() -> BotFrameworkAdapterSettings | None:
     settings = BotFrameworkAdapterSettings(app_id=app_id, app_password=app_pw)
     # Single-tenant bots authenticate against the customer tenant, not
     # the default Bot Framework directory.
-    tenant = os.environ.get("AAM_TEAMS_BOT_TENANT_ID") or os.environ.get("B2B_M365_TENANT_ID")
+    tenant = os.environ.get("AAM_TEAMS_BOT_TENANT_ID") or os.environ.get(
+        "B2B_M365_TENANT_ID"
+    )
     if tenant:
         settings.channel_auth_tenant = tenant
     return settings
@@ -65,7 +66,9 @@ async def _load_ref(am_email: str) -> TeamsConversationRef | None:
     async with session() as s:
         return (
             await s.execute(
-                select(TeamsConversationRef).where(TeamsConversationRef.am_email == am_email)
+                select(TeamsConversationRef).where(
+                    TeamsConversationRef.am_email == am_email
+                )
             )
         ).scalar_one_or_none()
 
@@ -74,13 +77,19 @@ def _ref_to_botbuilder(row: TeamsConversationRef) -> ConversationReference:
     return ConversationReference(
         channel_id="msteams",
         service_url=row.service_url,
-        conversation=ConversationAccount(id=row.conversation_id, tenant_id=row.tenant_id),
+        conversation=ConversationAccount(
+            id=row.conversation_id, tenant_id=row.tenant_id
+        ),
         bot=ChannelAccount(id=row.bot_id, name=row.bot_name),
-        user=ChannelAccount(id=row.user_id, name=row.user_name, aad_object_id=row.aad_object_id),
+        user=ChannelAccount(
+            id=row.user_id, name=row.user_name, aad_object_id=row.aad_object_id
+        ),
     )
 
 
-def _build_card_attachment(*, am_email: str, narrative: str, actions: list[dict]) -> Attachment:
+def _build_card_attachment(
+    *, am_email: str, narrative: str, actions: list[dict]
+) -> Attachment:
     """Reuse the AdaptiveCard schema from teams_channel.py."""
     from aam.teams_channel import _build_card
 
@@ -91,7 +100,9 @@ def _build_card_attachment(*, am_email: str, narrative: str, actions: list[dict]
     )
 
 
-async def send_proactive_dm(*, am_email: str, narrative: str, actions: list[dict]) -> dict:
+async def send_proactive_dm(
+    *, am_email: str, narrative: str, actions: list[dict]
+) -> dict:
     adapter = _adapter()
     if not adapter:
         log.info("aam.teams_dm.skipped", reason="no_bot_credentials")
@@ -105,7 +116,9 @@ async def send_proactive_dm(*, am_email: str, narrative: str, actions: list[dict
     ref = _ref_to_botbuilder(ref_row)
 
     async def _send(turn_context: TurnContext) -> None:
-        attachment = _build_card_attachment(am_email=am_email, narrative=narrative, actions=actions)
+        attachment = _build_card_attachment(
+            am_email=am_email, narrative=narrative, actions=actions
+        )
         await turn_context.send_activity(
             Activity(type=ActivityTypes.message, attachments=[attachment])
         )
@@ -116,11 +129,12 @@ async def send_proactive_dm(*, am_email: str, narrative: str, actions: list[dict
         log.info("aam.teams_dm.delivered", am=am_email)
         return {"ok": True}
     except Exception as e:
-        log.warning("aam.teams_dm.delivery_failed", am=am_email, err=str(e)[:300])
+        log.exception("aam.teams_dm.delivery_failed", am=am_email, err=str(e)[:300])
         return {"ok": False, "error": str(e)[:300]}
 
 
 # ---------- Capturing conversation references ----------
+
 
 async def store_conversation_ref(*, activity: Activity, am_email_resolver) -> None:
     """Called from the bot's /api/messages handler whenever an inbound
@@ -132,37 +146,53 @@ async def store_conversation_ref(*, activity: Activity, am_email_resolver) -> No
         return
     am_email = await am_email_resolver(user.aad_object_id)
     if not am_email:
-        log.info("teams_bot.skipped_capture", reason="aad_not_in_am_directory", aad=user.aad_object_id)
+        log.info(
+            "teams_bot.skipped_capture",
+            reason="aad_not_in_am_directory",
+            aad=user.aad_object_id,
+        )
         return
 
     ref = TurnContext.get_conversation_reference(activity)
+    # conversation/user/bot are all optional on the wire model. A reference
+    # missing any of them cannot be used to open a proactive DM later, so
+    # storing it would only defer the failure to send time.
+    if ref.conversation is None or ref.user is None or ref.bot is None:
+        log.warning(
+            "teams_bot.skipped_capture", reason="incomplete_conversation_reference"
+        )
+        return
+    conversation, user_account, bot_account = ref.conversation, ref.user, ref.bot
+    service_url = ref.service_url or ""
     async with session() as s:
         existing = (
             await s.execute(
-                select(TeamsConversationRef).where(TeamsConversationRef.am_email == am_email)
+                select(TeamsConversationRef).where(
+                    TeamsConversationRef.am_email == am_email
+                )
             )
         ).scalar_one_or_none()
         if existing:
-            existing.service_url = ref.service_url
-            existing.conversation_id = ref.conversation.id
-            existing.tenant_id = ref.conversation.tenant_id or ""
-            existing.user_id = ref.user.id
-            existing.user_name = ref.user.name
-            existing.bot_id = ref.bot.id
-            existing.bot_name = ref.bot.name
+            existing.service_url = service_url
+            existing.conversation_id = conversation.id
+            existing.tenant_id = conversation.tenant_id or ""
+            existing.user_id = user_account.id
+            existing.user_name = user_account.name or ""
+            existing.bot_id = bot_account.id
+            existing.bot_name = bot_account.name or ""
             existing.aad_object_id = user.aad_object_id
         else:
             s.add(
                 TeamsConversationRef(
                     am_email=am_email,
                     aad_object_id=user.aad_object_id,
-                    service_url=ref.service_url,
-                    conversation_id=ref.conversation.id,
-                    tenant_id=ref.conversation.tenant_id or "",
-                    user_id=ref.user.id,
-                    user_name=ref.user.name,
-                    bot_id=ref.bot.id,
-                    bot_name=ref.bot.name,
+                    service_url=service_url,
+                    conversation_id=conversation.id,
+                    tenant_id=conversation.tenant_id or "",
+                    user_id=user_account.id,
+                    user_name=user_account.name or "",
+                    bot_id=bot_account.id,
+                    bot_name=bot_account.name or "",
                 )
             )
-    log.info("teams_bot.captured_ref", am=am_email, conv=ref.conversation.id)
+    log.info("teams_bot.captured_ref", am=am_email, conv=conversation.id)

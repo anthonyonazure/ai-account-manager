@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from aam.db import Account, AccountSnapshot
 from aam.signals import (
@@ -15,39 +15,45 @@ from aam.signals import (
     usage_growth,
 )
 
-NOW = datetime.now(timezone.utc).replace(tzinfo=None)
+NOW = datetime.now(UTC).replace(tzinfo=None)
 
 
 def _account(**over):
-    base = dict(
-        id="t1", name="T", domain="t.com", tier="silver", region="NA",
-        services_purchased=["managed-soc"],
-        contract_start=NOW - timedelta(days=200),
-        contract_end=NOW + timedelta(days=200),
-        arr=50_000.0, industry="financial_services", am_email="a@x",
-    )
+    base = {
+        "id": "t1",
+        "name": "T",
+        "domain": "t.com",
+        "tier": "silver",
+        "region": "NA",
+        "services_purchased": ["managed-soc"],
+        "contract_start": NOW - timedelta(days=200),
+        "contract_end": NOW + timedelta(days=200),
+        "arr": 50_000.0,
+        "industry": "financial_services",
+        "am_email": "a@x",
+    }
     base.update(over)
     return Account(**base)
 
 
 def _snap(days_ago=0, **over):
-    base = dict(
-        account_id="t1",
-        captured_at=NOW - timedelta(days=days_ago),
-        hubspot_emails_opened_30d=10,
-        hubspot_meetings_30d=2,
-        hubspot_last_activity_days_ago=4,
-        zendesk_tickets_opened_30d=10,
-        zendesk_tickets_closed_30d=10,
-        zendesk_p1_count_30d=0,
-        zendesk_avg_resolution_hours=8.0,
-        zendesk_csat=4.5,
-        portal_logins_30d=30,
-        portal_modules_active=["soc-dashboard"],
-        portal_modules_unused=[],
-        portal_last_login_days_ago=2,
-        sharepoint_doc_views_30d=15,
-    )
+    base = {
+        "account_id": "t1",
+        "captured_at": NOW - timedelta(days=days_ago),
+        "hubspot_emails_opened_30d": 10,
+        "hubspot_meetings_30d": 2,
+        "hubspot_last_activity_days_ago": 4,
+        "zendesk_tickets_opened_30d": 10,
+        "zendesk_tickets_closed_30d": 10,
+        "zendesk_p1_count_30d": 0,
+        "zendesk_avg_resolution_hours": 8.0,
+        "zendesk_csat": 4.5,
+        "portal_logins_30d": 30,
+        "portal_modules_active": ["soc-dashboard"],
+        "portal_modules_unused": [],
+        "portal_last_login_days_ago": 2,
+        "sharepoint_doc_views_30d": 15,
+    }
     base.update(over)
     return AccountSnapshot(**base)
 
@@ -65,7 +71,10 @@ def test_engagement_decay_fires_on_drop():
 
 def test_engagement_decay_silent_on_stable():
     a = _account()
-    snaps = [_snap(days_ago=60, hubspot_emails_opened_30d=15), _snap(days_ago=0, hubspot_emails_opened_30d=14)]
+    snaps = [
+        _snap(days_ago=60, hubspot_emails_opened_30d=15),
+        _snap(days_ago=0, hubspot_emails_opened_30d=14),
+    ]
     assert engagement_decay(a, snaps) is None
 
 
@@ -99,7 +108,9 @@ def test_module_gap():
 
 
 def test_renewal_proximity_within_30d():
-    a = _account(contract_start=NOW - timedelta(days=340), contract_end=NOW + timedelta(days=20))
+    a = _account(
+        contract_start=NOW - timedelta(days=340), contract_end=NOW + timedelta(days=20)
+    )
     s = renewal_proximity(a, [_snap()])
     assert s and s["score"] >= 0.9
     assert s["direction"] == "risk"
@@ -112,13 +123,23 @@ def test_renewal_proximity_silent_when_far():
 
 def test_doc_activity_decay():
     a = _account()
-    s = doc_activity_decay(a, [_snap(days_ago=60, sharepoint_doc_views_30d=20), _snap(sharepoint_doc_views_30d=2)])
+    s = doc_activity_decay(
+        a,
+        [
+            _snap(days_ago=60, sharepoint_doc_views_30d=20),
+            _snap(sharepoint_doc_views_30d=2),
+        ],
+    )
     assert s and s["direction"] == "risk"
 
 
 def test_cosell_fit_with_healthy_peers():
     a = _account(industry="defense")
-    s = cosell_fit(a, [_snap(portal_logins_30d=80)], healthy_peers_by_industry={"defense": ["other-1"]})
+    s = cosell_fit(
+        a,
+        [_snap(portal_logins_30d=80)],
+        healthy_peers_by_industry={"defense": ["other-1"]},
+    )
     assert s and s["direction"] == "opportunity"
 
 

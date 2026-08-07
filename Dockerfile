@@ -31,6 +31,14 @@ RUN pip install --upgrade pip \
     && pip install /toolkit \
     && pip install .
 
+# Drop root before running the endpoint: the Bot Framework messaging route is
+# internet-reachable, so a compromise there should not also hand over root in
+# the container. /app is handed to the same user because the default
+# AAM_DATABASE_URL writes ./aam.db into the working directory.
+RUN useradd --system --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
 # Container Apps assigns $PORT (default 8080); we listen on it.
 ENV PORT=8080
 EXPOSE 8080

@@ -47,3 +47,10 @@ b2b-agent-toolkit = { path = "../b2b-agent-toolkit", editable = true }
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.mypy]
+# botbuilder-core and botbuilder-schema publish no py.typed marker and have no
+# stub packages on PyPI, so hand-written stubs for the slice of the Bot
+# Framework API this project calls live in ./stubs. This adds type information;
+# it does not relax any check.
+mypy_path = "stubs"
