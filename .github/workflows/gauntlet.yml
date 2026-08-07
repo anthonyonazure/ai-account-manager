@@ -153,7 +153,7 @@ jobs:
       - uses: actions/checkout@v4
       # Released tags on this action carry a v prefix; 0.28.0 does not
       # exist and the job failed to resolve the action at all.
-      - uses: aquasecurity/trivy-action@v0.33.1
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           severity: HIGH,CRITICAL
