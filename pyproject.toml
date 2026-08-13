@@ -54,3 +54,9 @@ asyncio_mode = "auto"
 # Framework API this project calls live in ./stubs. This adds type information;
 # it does not relax any check.
 mypy_path = "stubs"
+
+# The b2b-agent-toolkit dependency names its git source explicitly, because
+# that package is not on PyPI and a bare name there is resolvable by anyone who
+# registers it. Hatchling refuses direct references unless told otherwise.
+[tool.hatch.metadata]
+allow-direct-references = true
